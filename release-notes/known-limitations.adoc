@@ -1,0 +1,99 @@
+---
+sidebar: sidebar 
+permalink: release-notes/known-limitations.html 
+keywords: astra, control center, limitations, known limitations, interoperability 
+summary: Bekannte Einschränkungen identifizieren Plattformen, Geräte oder Funktionen, die von dieser Version des Produkts nicht unterstützt werden oder nicht korrekt mit dem Produkt zusammenarbeiten. Lesen Sie diese Einschränkungen sorgfältig durch. 
+---
+= Bekannte Einschränkungen in dieser Version
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/release-notes/
+
+
+Bekannte Einschränkungen identifizieren Plattformen, Geräte oder Funktionen, die von dieser Version des Produkts nicht unterstützt werden oder nicht korrekt mit dem Produkt zusammenarbeiten. Lesen Sie diese Einschränkungen sorgfältig durch.
+
+
+
+== Derselbe Cluster kann nicht von zwei Astra Control Center Instanzen gemanagt werden
+
+Wenn Sie ein Cluster auf einer anderen Astra Control Center-Instanz verwalten möchten, sollten Sie zuerst link:../use/unmanage.html#stop-managing-compute["Heben Sie das Management des Clusters ab"] Von der Instanz, auf der sie verwaltet wird, bevor Sie sie auf einer anderen Instanz verwalten. Nachdem Sie das Cluster aus dem Management entfernt haben, überprüfen Sie, ob das Cluster mit dem folgenden Befehl nicht gemanagt wird:
+
+[listing]
+----
+oc get pods n -netapp-monitoring
+----
+Es sollten keine Pods in diesem Namespace laufen oder der Namespace nicht existieren sollte. Wenn einer dieser beiden Optionen true ist, wird das Cluster nicht gemanagt.
+
+
+
+== Das Cluster wurde entfernt, obwohl Cluster und Netzwerk ordnungsgemäß funktionieren
+
+Wenn ein Cluster vorhanden ist `removed` Der Zustand der Cluster- und Netzwerk-Konnektivität erscheint jedoch ordnungsgemäß (externe Versuche, mit Kubernetes-APIs erfolgreich auf das Cluster zuzugreifen, sind dennoch erfolgreich), ist das Kubeconsg, das Sie Astra Control zur Verfügung gestellt haben, möglicherweise nicht mehr gültig. Dies kann an einer Zertifikatrotation oder einem Ablaufdatum im Cluster liegen. Um dieses Problem zu beheben, aktualisieren Sie die Anmeldeinformationen, die mit dem Cluster in Astra Control verbunden sind, mithilfe des link:https://docs.netapp.com/us-en/astra-automation-2108/index.html["Astra Control API"]:
+
+. Führen Sie einen POST-Anruf aus, um dem eine aktualisierte kubeconfy-Datei hinzuzufügen `/credentials` endpunkt und Abrufen der zugewiesenen Daten `id` Aus dem Antwortkörper.
+. Führen Sie einen PUT-Anruf aus dem aus `/clusters` endpunkt mithilfe der entsprechenden Cluster-ID und Festlegen des `credentialID` Bis zum `id` Wert aus dem vorherigen Schritt.
+
+
+Nachdem Sie diese Schritte ausgeführt haben, werden die mit dem Cluster verknüpften Anmeldeinformationen aktualisiert, und das Cluster sollte die Verbindung wiederherstellen und seinen Status auf aktualisieren `available`.
+
+
+
+== Vom Betreiber bereitgestellte Apps mit OLM-Enabled und Cluster-Scoped werden nicht unterstützt
+
+Astra Control Center unterstützt keine Apps, die mit OLM-fähigen Operatoren (Operator Lifecycle Manager) oder Operatoren mit Cluster-Umfang bereitgestellt werden.
+
+
+
+== Das Klonen von Apps kann nur mit derselben K8s-Distribution erfolgen
+
+Wenn Sie eine Applikation zwischen Clustern klonen, müssen die Quell- und Ziel-Cluster dieselbe Verteilung von Kubernetes aufweisen. Wenn Sie beispielsweise eine App aus einem OpenShift 4.7-Cluster klonen, verwenden Sie ein Ziel-Cluster, das auch OpenShift 4.7 ist.
+
+
+
+== OpenShift 4.8 wird nicht unterstützt
+
+OpenShift 4.8 wird für die Juli-Version von Astra Control Center nicht unterstützt. Weitere Informationen finden Sie unter link:../get-started/requirements.html["Anforderungen des Astra Control Centers"].
+
+
+
+== Mit Helm 2 implementierte Apps werden nicht unterstützt
+
+Wenn Sie Helm zur Implementierung von Apps verwenden, erfordert Astra Control Center Helm Version 3. Das Management und Klonen von mit Helm 3 bereitgestellten Apps (oder ein Upgrade von Helm 2 auf Helm 3) werden vollständig unterstützt. Weitere Informationen finden Sie unter link:../get-started/requirements.html["Anforderungen des Astra Control Centers"].
+
+
+
+== Astra Control Center überprüft nicht die von Ihnen eingegebenen Details für Ihren Proxy-Server
+
+Stellen Sie sicher, dass Sie link:../use/monitor-protect.html#add-a-proxy-server["Geben Sie die richtigen Werte ein"] Beim Herstellen einer Verbindung.
+
+
+
+== Datensicherung für Astra Control Center als App ist noch nicht verfügbar
+
+Diese Version unterstützt nicht die Möglichkeit, Astra als Applikation mithilfe von Snapshot-, Backup- oder Restore-Optionen zu managen.
+
+
+
+== Ungesunde Pods wirken sich auf das App-Management aus
+
+Wenn eine gemanagte App Pods in einem ungesunden Zustand aufweist, kann Astra Control keine neuen Backups und Klone erstellen.
+
+
+
+== Bestehende Verbindungen zu einem Postgres-Pod führen zu Fehlern
+
+Wenn Sie Vorgänge auf Postgres-Pods durchführen, sollten Sie nicht direkt innerhalb des Pods verbinden, um den psql-Befehl zu verwenden. Astra Control erfordert psql-Zugriff, um die Datenbanken einzufrieren und zu tauen. Wenn eine bereits vorhandene Verbindung besteht, schlägt der Snapshot, die Sicherung oder der Klon fehl.
+
+
+
+== Trident wird nicht von einem Cluster deinstalliert
+
+Wenn Sie ein Cluster aus Astra Control Center deinstallieren, wird Trident nicht automatisch aus dem Cluster deinstalliert. Um Trident zu deinstallieren, müssen Sie es benötigen https://netapp-trident.readthedocs.io/en/latest/kubernetes/operations/tasks/managing.html#uninstalling-trident["Befolgen Sie die folgenden Schritte in der Trident-Dokumentation"^].
+
+
+
+== Weitere Informationen
+
+* link:../release-notes/known-issues.html["Bekannte Probleme in diesem Release"]
+

@@ -1,0 +1,55 @@
+---
+sidebar: sidebar 
+permalink: use/restore-apps.html 
+keywords: restore app, restoring an app, restore an app, restore 
+summary: Astra kann Ihre Applikationskonfiguration und Ihren persistenten Storage aus einem Snapshot oder Backup wiederherstellen. Persistente Storage-Backups werden von Ihrem Objektspeicher übertragen, sodass die Wiederherstellung aus einem bestehenden Backup möglichst schnell erfolgt. 
+---
+= Wiederherstellung von Applikationen
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/use/
+
+
+[role="lead"]
+Astra Control Center kann Ihre Applikation aus einem Snapshot oder Backup wiederherstellen. Persistente Storage-Backups und Snapshots werden von Ihrem Objektspeicher übertragen. Die Wiederherstellung von einem vorhandenen Snapshot in denselben Cluster erfolgt also schneller als mit anderen Methoden. Sie können die Astra UI oder verwenden https://docs.netapp.com/us-en/astra-automation-2108/index.html["Das Astra API"^] Zur Wiederherstellung von Applikationen.
+
+
+NOTE: Wenn Sie Helm zur Implementierung von Apps verwenden, erfordert Astra Control Center Helm Version 3. Das Management und Klonen von mit Helm 3 bereitgestellten Apps (oder ein Upgrade von Helm 2 auf Helm 3) werden vollständig unterstützt. Mit Helm 2 implementierte Apps werden nicht unterstützt.
+
+
+NOTE: Wenn Sie ein anderes Cluster wiederherstellen, stellen Sie sicher, dass das Cluster denselben Zugriffsmodus für persistente Volumes verwendet (z. B. ReadWriteManche). Der Wiederherstellungsvorgang schlägt fehl, wenn der Zugriffsmodus des Ziel-persistenten Volumes anders ist.
+
+[NOTE]
+====
+Wenn Sie ein Projekt zum Hosten einer App auf einem OpenShift-Cluster erstellen, wird dem Projekt (oder dem Kubernetes-Namespace) eine SecurityContext-UID zugewiesen. Um Astra Control Center zum Schutz Ihrer App zu aktivieren und die App in ein anderes Cluster oder Projekt in OpenShift zu verschieben, müssen Sie Richtlinien hinzufügen, mit denen die App als beliebige UID ausgeführt werden kann. Als Beispiel erteilen die folgenden OpenShift-CLI-Befehle der WordPress-App die entsprechenden Richtlinien.
+
+`oc new-project wordpress`
+`oc adm policy add-scc-to-group anyuid system:serviceaccounts:wordpress`
+`oc adm policy add-scc-to-user privileged -z default -n wordpress`
+
+====
+.Schritte
+. Klicken Sie auf *Apps* und dann auf den Namen einer App.
+. Klicken Sie auf *Datenschutz*.
+. Wenn Sie von einem Snapshot wiederherstellen möchten, lassen Sie das *Snapshots* -Symbol ausgewählt. Klicken Sie andernfalls auf das Symbol *Backups*, um aus einem Backup wiederherzustellen.
+. Klicken Sie auf die Dropdown-Liste in der Spalte *Aktionen* für den Snapshot oder die Sicherung, aus der Sie wiederherstellen möchten.
+. Klicken Sie auf *Anwendung wiederherstellen*.
+. *Restore Details*: Geben Sie Details für die Wiederherstellung an:
++
+** Geben Sie einen Namen und einen Namespace für die App ein.
++
+
+NOTE: Wenn Sie eine gelöschte Anwendung wiederherstellen, wählen Sie einen anderen Namen und einen anderen Namespace für die Anwendung als den ursprünglichen Namen aus. Wenn der Name der wiederhergestellten Anwendung mit der gelöschten Anwendung identisch ist, schlägt der Wiederherstellungsvorgang fehl.
+
+** Wählen Sie das Ziel-Cluster für die App aus.
+** Klicken Sie Auf *Review*.
+
+
+. *Zusammenfassung wiederherstellen*: Überprüfen Sie die Details zur Wiederherstellungsaktion und klicken Sie auf *Wiederherstellen*.
+
+
+Astra Control Center stellt die App basierend auf den von Ihnen bereitgestellten Informationen wieder her.
+
+
+NOTE: Nach einer Datensicherungsoperation (Klonen, Backup, Restore) und einer anschließenden Anpassung des persistenten Volumes beträgt die Verzögerung bis zu zwanzig Minuten, bevor die neue Volume-Größe in der UI angezeigt wird. Der Datensicherungsvorgang ist innerhalb von Minuten erfolgreich und Sie können mit der Management Software für das Storage-Backend die Änderung der Volume-Größe bestätigen.

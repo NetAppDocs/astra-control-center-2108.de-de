@@ -1,0 +1,43 @@
+---
+sidebar: sidebar 
+permalink: concepts/choose-class-and-size.html 
+keywords: service level, storage class, storage classes, pv size, persistent volume size, volume size, bandwidth, performance, persistent, volume, kubernetes, containers 
+summary: Astra Control Center unterstützt nur Trident Storage-Klassen, die auf ONTAP Storage gestützt sind. Sie sollten verstehen, wie Storage-Klassen und persistente Volume-Größe Sie dabei unterstützen können, Ihre Performance-Ziele zu erreichen. 
+---
+= Storage-Klassen und persistente Volume-Größe
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/concepts/
+
+
+[role="lead"]
+Astra Control Center unterstützt ONTAP als Backend-Storage. Sie sollten verstehen, wie die Storage-Klasse und die PV-Größe (Persistent Volume) Sie bei der Erreichung Ihrer Performance-Ziele unterstützen können.
+
+
+
+== Überblick
+
+Das Astra Control Center unterstützt zurzeit nur Trident Storage-Klassen, die von ONTAP Storage unterstützt werden. Astra Control Center erkennt und nutzt die bereits bereitgestellten Ressourcen wie ONTAP, Trident und die zugehörigen Storage-Klassen.
+
+
+NOTE: Trident Storage-Kurse sollten außerhalb des Astra Control Center vorkonfiguriert sein.
+
+
+
+== Speicherklassen
+
+Wenn Sie Cluster zum Astra Control Center hinzufügen, werden Sie aufgefordert, eine der zuvor erkannten Storage-Klassen für persistente Volumes auszuwählen. Service Levels in Storage-Klassen sind für unterschiedliche Kapazitäts- und Bandbreitenanforderungen konzipiert. Diese erkannten Storage-Kurse sind für die Verwendung im Astra Control Center qualifiziert.
+
+
+
+== Persistente Volume-Größe und -Performance
+
+In Trident finden Sie Informationen, die Kostenvergleiche und Beispiele finden, mit denen Sie besser verstehen, wie Sie ein Service-Level mit der Volume-Größe koppeln, um Ihre Performance-Ziele zu erreichen.
+
+
+
+== Weitere Informationen
+
+* https://netapp-trident.readthedocs.io/en/stable-v21.01/dag/kubernetes/storage_configuration_trident.html["Trident Dokumentation zur Storage-Konfiguration"^]
+

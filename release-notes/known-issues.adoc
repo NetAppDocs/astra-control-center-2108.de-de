@@ -1,0 +1,316 @@
+---
+sidebar: sidebar 
+permalink: release-notes/known-issues.html 
+keywords: astra, control center, bugs, known issues, problems 
+summary: Bekannte Probleme identifizieren Probleme, die Sie daran hindern könnten, diese Produktversion erfolgreich zu verwenden. 
+---
+= Bekannte Probleme in dieser Version
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/release-notes/
+
+
+Bekannte Probleme identifizieren Probleme, die Sie daran hindern könnten, diese Produktversion erfolgreich zu verwenden.
+
+Die folgenden bekannten Probleme wirken sich auf die aktuelle Version aus:
+
+*  ClusterRoleBinding created by Astra Control Center CRD during installation
+*  with user-defined label goes into "removed" state
+*  to stop running app backup
+*  or clone fails for apps using PVCs with decimal units in Astra Control Center
+*  Control Center UI slow to show changes to app resources such as persistent volume changes
+*  app restore from backup Trident creates a larger PV than the original PV
+*  performance impacted by large persistent volumes
+*  clones fail using a specific version of PostgreSQL
+*  clones fail when using Service Account level OCP Security Context Constraints (SCC)
+*  buckets in Astra Control Center do not report available capacity
+*  buckets between instances of Astra Control Center causes failures
+*  a bucket provider type with credentials for another type causes data protection failures
+*  and snapshots might not be retained during removal of an Astra Control Center instance
+*  backups are retained as part of scheduled backup
+* link:known-issues.html#clone-operation-cant-use-other-buckets-besides-the-default["Der Klonvorgang kann außer dem Standard keine anderen Buckets verwenden"]
+*  a cluster with Astra Control Center fails when default kubeconfig file contains more than one context
+* link:known-issues.html#cant-determine-asup-tar-bundle-status-in-scaled-environment["In skalierten Umgebungen kann der ASUP tar-Bundle-Status nicht ermittelt werden"]
+*  of Astra Control Center fails to clean up the monitoring-operator pod on the managed cluster
+*  of Astra Control Center fails to clean up Traefik CRDs
+*  collection stuck in a generating or uploading state
+
+
+
+
+== Falsche Clusterrollenbinding, die von Astra Control Center CRD während der Installation erstellt wurde
+
+Wenden Sie den folgenden Patch auf alle Kubernetes-Cluster an, in denen die ACC-Operator-Version 21.08.65 bereitgestellt wurde. Sie sollte auch angewendet werden, wenn der ACC-Operator erneut eingesetzt wird.
+
+So lösen Sie dieses Problem:
+
+. Austausch `ACC_NAMESPACE` Im Skript unten mit dem Namespace, den Sie verwendet haben link:../get-started/install_acc.html#install-astra-control-center["Implementieren Sie Astra Control Center"].
++
+[source, cli]
+----
+cat <<EOF | kubectl apply -f –
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: acc-operator-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: acc-operator-manager-role
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: netapp-acc-operator
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:serviceaccounts:ACC_NAMESPACE
+EOF
+----
+. Führen Sie das Skript aus.
+
+
+Der Patch entfernt die folgenden beiden Themen aus `ClusterRoleBinding: "acc-operator-manager-rolebinding"`
+
+[listing]
+----
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:serviceaccounts
+- apiGroup: ""
+  kind: Group
+  name: system:serviceaccounts
+----
+
+
+== App mit benutzerdefiniertem Label geht in den Status „entfernt“
+
+Wenn Sie eine App mit einem nicht vorhandenen k8s-Label definieren, erstellt, verwaltet und entfernt die App sofort. Um dies zu vermeiden, fügen Sie das k8s-Etikett zu Pods und Ressourcen hinzu, nachdem die App vom Astra Control Center verwaltet wurde.
+
+
+
+== App-Backup kann nicht beendet werden
+
+Es gibt keine Möglichkeit, ein ausgelaufes Backup zu stoppen. Wenn Sie das Backup löschen müssen, warten Sie, bis es abgeschlossen ist, und befolgen Sie die Anweisungen unter link:../use/protect-apps.html#delete-backups["Backups löschen"]. Verwenden Sie zum Löschen eines fehlgeschlagenen Backups den link:https://docs.netapp.com/us-en/astra-automation-2108/index.html["Astra API"^].
+
+
+
+== Backup oder Klon schlägt bei Anwendungen fehl, die PVCs mit Dezimaleinheiten im Astra Control Center verwenden
+
+Volumes, die mit Dezimaleinheiten erstellt wurden, scheitern mit dem Astra Control Center Backup- oder Klonprozess. Siehe link:https://kb.netapp.com/Advice_and_Troubleshooting/Cloud_Services/Astra/Backup_or_clone_may_fail_for_applications_using_PVCs_with_decimal_units_in_Astra_Control_Center["knowledgebase-Artikel"] Finden Sie weitere Informationen.
+
+
+
+== Die UI des Astra Control Center zeigt nur langsam Änderungen an Applikationsressourcen, z. B. Änderungen am persistenten Volume
+
+Nach einer Datensicherungsoperation (Klonen, Backup, Restore) und einer anschließenden Anpassung des persistenten Volumes beträgt die Verzögerung bis zu zwanzig Minuten, bevor die neue Volume-Größe in der UI angezeigt wird. Diese Verzögerung in der Benutzeroberfläche kann auch auftreten, wenn App-Ressourcen hinzugefügt oder geändert werden. In diesem Fall ist eine Datensicherung innerhalb weniger Minuten erfolgreich und Sie können mit der Management Software für das Storage-Backend die Änderung der Volume-Größe bestätigen.
+
+
+
+== Trident erstellt während der Wiederherstellung der App aus einem Backup ein größeres PV als das ursprüngliche PV
+
+Wenn Sie ein persistentes Volume nach der Erstellung eines Backups skalieren und dann aus diesem Backup wiederherstellen, entspricht die persistente Volume-Größe der neuen PV-Größe und nicht die Backup-Größe.
+
+
+
+== Performance-Beeinträchtigung des Klons durch große persistente Volumes
+
+Klone von sehr großen und verbrauchten persistenten Volumes können zeitweise langsam sein und sind vom Cluster-Zugriff auf den Objektspeicher abhängig. Wenn der Klon aufgehängt wurde und seit mehr als 30 Minuten keine Daten kopiert wurden, beendet Astra Control die Klonaktion.
+
+
+
+== Applikationsklone können nicht mit einer bestimmten Version von PostgreSQL verwendet werden
+
+App-Klone innerhalb desselben Clusters schlagen konsequent mit dem Bitnami PostgreSQL 11.5.0 Diagramm fehl. Um erfolgreich zu klonen, verwenden Sie eine frühere oder höhere Version des Diagramms.
+
+
+
+== Anwendungsklone sind bei der Verwendung von OCP-Sicherheitskontextsensitonen (SCC) auf Servicekontoebene fehlgeschlagen.
+
+Ein Applikationsklon kann fehlschlagen, wenn die ursprünglichen Einschränkungen des Sicherheitskontexts auf der Service-Account-Ebene innerhalb des Namespace auf dem OCP-Cluster konfiguriert sind. Wenn der Anwendungsklon ausfällt, wird er im Bereich Managed Applications im Astra Control Center mit dem Status angezeigt `Removed`. Siehe https://kb.netapp.com/Advice_and_Troubleshooting/Cloud_Services/Astra/Application_clone_is_failing_for_an_application_in_Astra_Control_Center["knowledgebase-Artikel"] Finden Sie weitere Informationen.
+
+
+
+== S3 Buckets im Astra Control Center berichten nicht über die verfügbare Kapazität
+
+Bevor Sie Backups oder Klonanwendungen durchführen, die von Astra Control Center gemanagt werden, sollten Sie die Bucket-Informationen im ONTAP oder StorageGRID Managementsystem prüfen.
+
+
+
+== Die Wiederverwendung von Buckets zwischen den Instanzen des Astra Control Centers verursacht Fehler
+
+Wenn Sie versuchen, einen Eimer, der von einer anderen oder einer früheren Installation von Astra Control Center verwendet wird, zu verwenden, wird Backup und Restore fehlschlagen. Sie müssen einen anderen Eimer verwenden oder den zuvor verwendeten Eimer vollständig reinigen. Sie können die Buckets nicht zwischen Instanzen des Astra Control Center teilen.
+
+
+
+== Wenn Sie einen Bucket-Provider-Typ mit Zugangsdaten für einen anderen Typ auswählen, führt dies zu Fehlern bei der Datensicherung
+
+Wenn Sie einen Bucket hinzufügen, wählen Sie den richtigen Bucket-Provider-Typ mit den Zugangsdaten aus, die für diesen Provider korrekt sind. Die UI akzeptiert beispielsweise NetApp ONTAP S3 als Typ mit StorageGRID Zugangsdaten. Dies führt jedoch dazu, dass alle künftigen Applikations-Backups und -Wiederherstellungen mit diesem Bucket fehlschlagen.
+
+
+
+== Backups und Snapshots werden während der Entfernung einer Astra Control Center-Instanz nicht aufbewahrt
+
+Wenn Sie über eine Evaluierungslizenz verfügen, sollten Sie Ihre Konto-ID speichern, um Datenverlust im Falle eines Ausfalls des Astra Control Center zu vermeiden, wenn Sie ASUPs nicht senden.
+
+
+
+== Zusätzliche Backups werden im Rahmen des geplanten Backups aufbewahrt
+
+Manchmal werden ein oder mehrere Backups im Astra Control Center über die im Backup-Zeitplan festgelegte Anzahl hinaus aufbewahrt. Diese zusätzlichen Backups sollten im Rahmen eines geplanten Backups gelöscht werden, aber nicht gelöscht werden und in einem stecken bleiben `pending` Bundesland. Um das Problem zu lösen, https://docs.netapp.com/us-en/astra-automation-2108/workflows/wf_delete_backup.html["Löschen erzwingen"] Die zusätzlichen Backups.
+
+
+
+== Der Klonvorgang kann neben dem Standard keine anderen Buckets verwenden
+
+Während eines Applikations-Backups oder Applikations-Restores können Sie optional eine Bucket-ID angeben. Ein Applikationsklonvorgang verwendet jedoch immer den definierten Standard-Bucket. Es besteht keine Möglichkeit, die Buckets für einen Klon zu ändern. Wenn Sie die Kontrolle darüber haben möchten, welcher Bucket verwendet wird, können Sie entweder link:../use/manage-buckets.html#edit-a-bucket["Ändern Sie den Bucket-Standard"] Oder machen Sie ein link:../use/protect-apps.html#create-a-backup["Backup"] Gefolgt von A link:../use/restore-apps.html["Wiederherstellen"] Separat.
+
+
+
+== Das Verwalten eines Clusters mit Astra Control Center schlägt fehl, wenn die standardmäßige kubeconfig-Datei mehr als einen Kontext enthält
+
+Sie können ein kubeconfig nicht mit mehr als einem Cluster und Kontext darin verwenden. Siehe link:https://kb.netapp.com/Advice_and_Troubleshooting/Cloud_Services/Astra/Managing_cluster_with_Astra_Control_Center_may_fail_when_using_default_kubeconfig_file_contains_more_than_one_context["knowledgebase-Artikel"] Finden Sie weitere Informationen.
+
+
+
+== In skalierten Umgebungen kann der ASUP tar-Paketstatus nicht ermittelt werden
+
+Während der ASUP Sammlung wird der Status des Bundles in der UI als entweder gemeldet `collecting` Oder `done`. Die Sammlung kann in großen Umgebungen bis zu einer Stunde dauern. Während des ASUP Downloads reicht die Netzwerk-Dateiübertragungsgeschwindigkeit für das Bundle möglicherweise nicht aus, und der Download kann nach 15 Minuten ohne Angabe im UI außerhalb der Zeit erfolgen. Download-Probleme hängen von der Größe des ASUP, der skalierten Cluster-Größe und ab, ob die Erfassungszeit das siebentägige Limit übersteigt.
+
+
+
+== Bei der Deinstallation des Astra Control Center wird der Monitor-Operator POD im Managed Cluster nicht bereinigt
+
+Wenn Sie das Management Ihrer Cluster nicht rückgängig gemacht haben, bevor Sie Astra Control Center deinstalliert haben, können Sie die Pods im netapp-Monitoring Namespace und den Namespace manuell mit den folgenden Befehlen löschen:
+
+.Schritte
+. Löschen `acc-monitoring` Agent:
++
+[listing]
+----
+oc delete agents acc-monitoring -n netapp-monitoring
+----
++
+Ergebnis:
+
++
+[listing]
+----
+agent.monitoring.netapp.com "acc-monitoring" deleted
+----
+. Löschen Sie den Namespace:
++
+[listing]
+----
+oc delete ns netapp-monitoring
+----
++
+Ergebnis:
+
++
+[listing]
+----
+namespace "netapp-monitoring" deleted
+----
+. Bestätigen der entfernten Ressourcen:
++
+[listing]
+----
+oc get pods -n netapp-monitoring
+----
++
+Ergebnis:
+
++
+[listing]
+----
+No resources found in netapp-monitoring namespace.
+----
+. Bestätigen Sie, dass der Monitoring Agent entfernt wurde:
++
+[listing]
+----
+oc get crd|grep agent
+----
++
+Beispielergebnis:
+
++
+[listing]
+----
+agents.monitoring.netapp.com                     2021-07-21T06:08:13Z
+----
+. Informationen zur benutzerdefinierten Ressourcendefinition löschen:
++
+[listing]
+----
+oc delete crds agents.monitoring.netapp.com
+----
++
+Ergebnis:
+
++
+[listing]
+----
+customresourcedefinition.apiextensions.k8s.io "agents.monitoring.netapp.com" deleted
+----
+
+
+
+
+== Bei der Deinstallation von Astra Control Center werden die Traefik CRDs nicht bereinigt
+
+Sie können die Traefik-CRDs manuell löschen:
+
+.Schritte
+. Bestätigen Sie, welche CRDs beim Deinstallationsprozess nicht gelöscht wurden:
++
+[listing]
+----
+kubectl get crds |grep -E 'traefik'
+----
++
+Antwort
+
++
+[listing]
+----
+ingressroutes.traefik.containo.us             2021-06-23T23:29:11Z
+ingressroutetcps.traefik.containo.us          2021-06-23T23:29:11Z
+ingressrouteudps.traefik.containo.us          2021-06-23T23:29:12Z
+middlewares.traefik.containo.us               2021-06-23T23:29:12Z
+serverstransports.traefik.containo.us         2021-06-23T23:29:13Z
+tlsoptions.traefik.containo.us                2021-06-23T23:29:13Z
+tlsstores.traefik.containo.us                 2021-06-23T23:29:14Z
+traefikservices.traefik.containo.us           2021-06-23T23:29:15Z
+----
+. Löschen Sie die CRDs:
++
+[listing]
+----
+kubectl delete crd ingressroutes.traefik.containo.us ingressroutetcps.traefik.containo.us ingressrouteudps.traefik.containo.us middlewares.traefik.containo.us serverstransports.traefik.containo.us tlsoptions.traefik.containo.us tlsstores.traefik.containo.us traefikservices.traefik.containo.us
+----
+
+
+
+
+== ASUP-Sammlung ist in einem Erzeugen oder Hochladen enthalten
+
+Wenn ein ASUP POD abgebrochen oder neu gestartet wird, kann eine ASUP Sammlung in einem Erzeugungs- oder Upload-Status stecken. Führen Sie Folgendes durch link:https://docs.netapp.com/us-en/astra-automation-2108/index.html["Astra Control REST-API"] Aufruf zum erneuten Starten der manuellen Erfassung:
+
+[cols="25,75"]
+|===
+| HTTP-Methode | Pfad 
+
+
+| POST | /Accounts/{AccountID}/Core/v1/asups 
+|===
+
+NOTE: Diese API-Problemumgehung funktioniert nur, wenn sie mehr als 10 Minuten nach Start von ASUP durchgeführt hat.
+
+
+
+== Weitere Informationen
+
+* link:../release-notes/known-limitations.html["Bekannte Einschränkungen für diese Version"]
+
