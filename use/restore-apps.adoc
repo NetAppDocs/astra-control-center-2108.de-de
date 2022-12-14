@@ -49,6 +49,7 @@ NOTE: Wenn Sie eine gelöschte Anwendung wiederherstellen, wählen Sie einen and
 . *Zusammenfassung wiederherstellen*: Überprüfen Sie die Details zur Wiederherstellungsaktion und klicken Sie auf *Wiederherstellen*.
 
 
+.Ergebnis
 Astra Control Center stellt die App basierend auf den von Ihnen bereitgestellten Informationen wieder her.
 
 
