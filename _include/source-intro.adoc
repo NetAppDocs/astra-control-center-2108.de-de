@@ -58,8 +58,7 @@ Astra Control Center unterstützt keine Apps, die mit OLM-fähigen Operatoren (O
 
 NetApp hat einige Applikationen validiert, um die Sicherheit und Konsistenz der Snapshots und Backups zu gewährleisten.
 
-* https://docs.netapp.com/us-en/astra/learn/validated-vs-standard.html["Erfahren Sie im Astra Control Service den Unterschied zwischen einer validierten App und einer Standard-App"^].
-* https://docs.netapp.com/us-en/astra-control-center/concepts/validated-vs-standard.html["Erfahren Sie im Astra Control Center den Unterschied zwischen einer validierten App und einer Standard-App"^].
+* link:../concepts/validated-vs-standard.html["Erfahren Sie im Astra Control Center den Unterschied zwischen einer validierten App und einer Standard-App"^].
 
 
 Unabhängig von der Art der Applikation, die Sie mit Astra Control verwenden, sollten Sie den Backup- und Restore-Workflow immer selbst testen, um Ihre Disaster-Recovery-Anforderungen zu erfüllen.
@@ -142,7 +141,7 @@ Sie können Applikationen zu Ihrem Cluster hinzufügen. Wenn Sie auch bereits ei
 
 == Finden Sie weitere Informationen
 
-* https://docs.netapp.com/us-en/astra/index.html["Dokumentation des Astra Control Service"^]
+* https://docs.netapp.com/us-en/astra-control-service/index.html["Dokumentation des Astra Control Service"^]
 * https://docs.netapp.com/us-en/astra-control-center/index.html["Astra Control Center-Dokumentation"^]
 * https://docs.netapp.com/us-en/trident/index.html["Astra Trident-Dokumentation"^]
 * https://docs.netapp.com/us-en/astra-automation-2108/index.html["Verwenden Sie die Astra API"^]
